@@ -3,6 +3,7 @@ import bcrypt
 from datetime import datetime
 from app.utils.supabase_connection import supabaseConnection as sC
 from app.models import Maestro
+from .auth import admin_required
 
 maestros_admin_bp = Blueprint("maestros_admin", __name__)
 
@@ -11,6 +12,7 @@ maestros_admin_bp = Blueprint("maestros_admin", __name__)
 
 # Ruta para ver todos los maestros y crear uno nuevo
 @maestros_admin_bp.route('/maestros', methods=['GET', 'POST'])
+@admin_required
 def manejo_maestros():
     if request.method == 'GET':
         return get_maestros()
@@ -195,6 +197,7 @@ def crear_maestro():
 # Rutas para ver a un maestro en específico
 # por id
 @maestros_admin_bp.route('/maestros/<string:id_usuario>')
+@admin_required
 def get_maestro(id_usuario):
     """Endpoint para obtener un maestro por su ID de usuario."""
     try:
@@ -223,6 +226,7 @@ def get_maestro(id_usuario):
 
 # por nombre
 @maestros_admin_bp.route('/maestros/nombre/<string:nombre>')
+@admin_required
 def get_maestro_by_name(nombre):
     """Endpoint para obtener un maestro por su nombre completo."""
     try:
@@ -271,6 +275,7 @@ def get_maestro_by_name(nombre):
 
 # por especialidad
 @maestros_admin_bp.route('/maestros/especialidad/<string:especialidad>')
+@admin_required
 def get_maestros_by_specialty(especialidad):
     """Endpoint para obtener maestros por especialidad."""
     try:
@@ -300,6 +305,7 @@ def get_maestros_by_specialty(especialidad):
 
 # por edad
 @maestros_admin_bp.route('/maestros/edad/<int:edad>')
+@admin_required
 def get_maestros_by_age(edad):
     """Endpoint para obtener maestros por edad."""
     try:
@@ -332,6 +338,7 @@ def get_maestros_by_age(edad):
 
 # Ruta para eliminar un maestro por su ID
 @maestros_admin_bp.route('/maestros/<string:id_usuario>', methods=['DELETE'])
+@admin_required
 def delete_maestro(id_usuario):
     """Endpoint para eliminar un maestro por su ID de usuario."""
     try:
@@ -491,6 +498,7 @@ def delete_maestro(id_usuario):
 
 # Ruta para ver los cursos de un maestro
 @maestros_admin_bp.route('/maestros/<string:id_maestro>/cursos', methods=['GET'])
+@admin_required
 def get_cursos_maestro(id_maestro):
     """
     Endpoint para obtener los cursos asignados a un maestro por su ID.

@@ -76,33 +76,3 @@ def ver_pdf_planeacion_asignacion(id_asignacion):
     except Exception as e:
         print(f"Error al servir planeación: {e}")
         return jsonify({'success': False, 'error': 'Error interno'}), 500
-
-
-@asignaciones_admin_bp.route('/asignaciones/<int:id_asignacion>/fechas-parciales', methods=['POST'])
-def registrar_fecha_parcial(id_asignacion):
-    data = request.get_json()
-    numero_parcial = data.get("numero_parcial")
-    fecha_inicio = data.get("fecha_inicio")
-    fecha_fin = data.get("fecha_fin")
-    activo = data.get("activo", True)
-
-    # Validación básica
-    if numero_parcial not in [1, 2, 3]:
-        return jsonify({"error": "El número de parcial debe ser 1, 2 o 3"}), 400
-
-    try:
-        fecha_inicio_dt = datetime.fromisoformat(fecha_inicio)
-        fecha_fin_dt = datetime.fromisoformat(fecha_fin)
-    except Exception:
-        return jsonify({"error": "Formato de fecha inválido. Usa ISO 8601."}), 400
-
-    if fecha_fin_dt <= fecha_inicio_dt:
-        return jsonify({"error": "La fecha de fin debe ser posterior a la de inicio"}), 400
-
-    # Lógica de servicio
-    resultado = crear_fecha_parcial(id_asignacion, numero_parcial, fecha_inicio_dt, fecha_fin_dt, activo)
-    if resultado.get("error"):
-        return jsonify(resultado), 400
-
-    return jsonify(resultado), 201
-
