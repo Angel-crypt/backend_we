@@ -10,9 +10,8 @@ def create_app():
     CORS(app)
     app.secret_key = os.environ.get("SECRET_KEY")
 
-    from app.routes import admin_bp, maestro_bp, static_bp
+    from app.routes import admin_bp, maestro_bp
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(maestro_bp, url_prefix='/maestro')
-    app.register_blueprint(static_bp, url_prefix='/static-files')
 
     return app

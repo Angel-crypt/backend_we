@@ -3,9 +3,12 @@ from app.utils.supabase_connection import supabaseConnection as sC
 
 maestro_planning_bp = Blueprint("maestro_planning", __name__)
 
+from flask import send_from_directory, current_app, jsonify, session
+import os
+
 @maestro_planning_bp.route('/planning/<int:id_asignacion>', methods=['GET'])
 def get_planning(id_asignacion):
-    """Endpoint para obtener la planificación de un grupo específico."""
+    """Endpoint para obtener y enviar la planificación PDF de un grupo específico."""
     try:
         # Verificar autenticación
         if 'user_id' not in session or 'role' not in session:
@@ -23,7 +26,7 @@ def get_planning(id_asignacion):
         user_id = session['user_id']
         supabase = sC.get_instance().get_client()
 
-        # Verificar que la asignación pertenece al maestro
+        # Verificar que la asignación pertenece al maestro y obtener el nombre del archivo
         asignacion_response = supabase.table('asignacion').select(
             'planeacion_pdf_url'
         ).eq('id_asignacion', id_asignacion).eq('id_maestro', user_id).execute()
@@ -42,18 +45,29 @@ def get_planning(id_asignacion):
                 'error': 'No se encontró planificación para este grupo'
             }), 404
 
-        return jsonify({
-            'success': True,
-            'data': {
-                'planeacion_pdf_url': planeacion_url
-            }
-        })
+        # Extraer solo el nombre del archivo desde la URL (por ejemplo, "/static/uploads/planeaciones/archivo.pdf")
+        filename = os.path.basename(planeacion_url)
+
+        # Definir el directorio donde están los PDFs
+        directory = os.path.join(os.getcwd(), 'static', 'uploads', 'planeaciones')
+
+        # Verificar que el archivo exista
+        file_path = os.path.join(directory, filename)
+        if not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'error': 'El archivo de planificación no fue encontrado en el servidor'
+            }), 404
+
+        # Enviar el archivo PDF
+        return send_from_directory(directory, filename)
 
     except Exception as e:
         return jsonify({
             'success': False,
             'error': f'Error interno del servidor: {str(e)}'
         }), 500
+
 
 @maestro_planning_bp.route('/planning/<int:id_asignacion>', methods=['POST'])
 def upload_planning(id_asignacion):
