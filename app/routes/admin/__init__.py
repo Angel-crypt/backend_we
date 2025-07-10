@@ -18,29 +18,28 @@ def get_parciales():
     Endpoint para obtener todas las fechas parciales registradas en la base de datos.
     """
     try:
-        # Obtener conexión a Supabase
         supabase = sC.get_instance().get_client()
-        
-        # Consultar datos de fechas parciales
-        response = supabase.table('fecha_parcial').select('*').execute()
-        
+
+        response = supabase.table('fechas_parciales').select('*').execute()
+
         if not response.data:
             return jsonify({
                 'success': False,
                 'error': 'No se encontraron fechas parciales'
             }), 404
-        
+
         return jsonify({
             'success': True,
             'data': response.data,
             'total': len(response.data)
         })
-    
+
     except Exception as e:
         return jsonify({
             'success': False,
             'error': str(e)
         }), 500
+
 
 # Registrar sub-blueprints
 admin_bp.register_blueprint(alumnos_admin_bp)
