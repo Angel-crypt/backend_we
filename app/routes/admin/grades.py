@@ -13,9 +13,9 @@ def get_grades_by_assignment(id_asignacion):
         
         # Verificar que la asignación existe
         asignacion_response = supabase.table('asignacion').select(
-            'id_asignacion, curso(nombre, codigo), grupo(nombre_grupo), maestro(nombre, apellido_paterno)'
+            'id_asignacion, curso(id_curso, nombre, codigo), grupo(id_grupo, nombre_grupo), maestro(id_usuario, nombre, apellido_paterno, apellido_materno)'
         ).eq('id_asignacion', id_asignacion).execute()
-        
+
         if not asignacion_response.data:
             return jsonify({
                 'success': False,
@@ -26,7 +26,7 @@ def get_grades_by_assignment(id_asignacion):
         
         # Obtener todas las calificaciones de la asignación
         calificaciones_response = supabase.table('calificaciones').select(
-            '*, alumno(nombre, apellido_paterno, apellido_materno)'
+            '*, alumno(id_alumno, nombre, apellido_paterno, apellido_materno)'
         ).eq('id_asignacion', id_asignacion).execute()
         
         return jsonify({
@@ -63,21 +63,20 @@ def get_grades_by_teacher(id_maestro):
         
         # Obtener asignaciones del maestro
         asignaciones_response = supabase.table('asignacion').select(
-            'id_asignacion, curso(nombre, codigo), grupo(nombre_grupo)'
+            'id_asignacion, curso(id_curso, nombre, codigo), grupo(id_grupo, nombre_grupo)'
         ).eq('id_maestro', id_maestro).execute()
-        
+
         grades_data = []
         
         for asignacion in asignaciones_response.data:
             # Obtener calificaciones para cada asignación
             calificaciones_response = supabase.table('calificaciones').select(
-                '*, alumno(nombre, apellido_paterno, apellido_materno)'
+                '*, alumno(id_alumno, nombre, apellido_paterno, apellido_materno)'
             ).eq('id_asignacion', asignacion['id_asignacion']).execute()
             
             grades_data.append({
                 'asignacion': asignacion,
-                'calificaciones': calificaciones_response.data,
-                'total_estudiantes': len(calificaciones_response.data)
+                'calificaciones': calificaciones_response.data
             })
         
         return jsonify({
@@ -104,7 +103,7 @@ def get_all_lesson_plans():
         
         # Obtener todas las asignaciones con planificaciones
         planificaciones_response = supabase.table('asignacion').select(
-            'id_asignacion, planeacion_pdf_url, curso(nombre, codigo), grupo(nombre_grupo), maestro(nombre, apellido_paterno, apellido_materno)'
+            'id_asignacion, planeacion_pdf_url, curso(id_curso, nombre, codigo), grupo(id_grupo, nombre_grupo), maestro(id_usuario, nombre, apellido_paterno, apellido_materno)'
         ).not_.is_('planeacion_pdf_url', 'null').execute()
         
         if not planificaciones_response.data:
@@ -144,9 +143,9 @@ def get_lesson_plans_by_teacher(id_maestro):
         
         # Obtener planificaciones del maestro
         planificaciones_response = supabase.table('asignacion').select(
-            'id_asignacion, planeacion_pdf_url, curso(nombre, codigo), grupo(nombre_grupo)'
+            'id_asignacion, planeacion_pdf_url, curso(id_curso, nombre, codigo), grupo(id_grupo, nombre_grupo)'
         ).eq('id_maestro', id_maestro).execute()
-        
+
         # Filtrar solo las que tienen planificación
         planificaciones_con_pdf = [p for p in planificaciones_response.data if p['planeacion_pdf_url']]
         
