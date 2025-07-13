@@ -77,17 +77,7 @@ def login():
         # Respuesta exitosa (sin incluir contraseña)
         return jsonify({
             'success': True,
-            'message': 'Login exitoso',
-            'data': {
-                'user_id': id_usuario,
-                'role': user['role'],
-                'maestro': {
-                    'nombre': maestro['nombre'],
-                    'apellido_paterno': maestro['apellido_paterno'],
-                    'apellido_materno': maestro.get('apellido_materno'),
-                    'especialidad': maestro.get('especialidad')
-                }
-            }
+            'message': 'Login exitoso'
         })
     
     except Exception as e:

@@ -7,7 +7,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, supports_credentials=True, origins=["http://localhost:4200"])
     app.secret_key = os.environ.get("SECRET_KEY")
     
     api_version = 'v1'

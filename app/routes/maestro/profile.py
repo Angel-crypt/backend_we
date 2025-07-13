@@ -249,7 +249,6 @@ def manage_availability():
     except Exception as e:
         return _error_response(f'Error interno del servidor: {str(e)}', 500)
 
-
 @maestro_profile_bp.route('/availability/summary', methods=['GET'])
 def get_availability_summary():
     """Endpoint para obtener un resumen de la disponibilidad del maestro por día"""
@@ -297,5 +296,3 @@ def get_availability_summary():
 
     except Exception as e:
         return _error_response(f'Error interno del servidor: {str(e)}', 500)
-
-
