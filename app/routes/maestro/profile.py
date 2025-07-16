@@ -105,10 +105,11 @@ def manage_availability():
             })
 
         data = request.get_json(force=True, silent=True)
+        print(data)
         if not data and request.method in ['POST', 'PUT', 'DELETE']:
             return _error_response('No se proporcionaron datos JSON', 400)
 
-        valid_days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo']
+        valid_days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
 
         if request.method == 'POST':
             required_fields = ['dia_semana', 'hora_inicio', 'hora_fin']

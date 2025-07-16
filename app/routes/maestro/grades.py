@@ -60,7 +60,7 @@ def get_grades(id_asignacion, numero_parcial):
 
 @maestro_grades_bp.route('/grades/<int:id_asignacion>/<int:numero_parcial>', methods=['POST'])
 def upload_grades(id_asignacion, numero_parcial):
-    """Endpoint para subir o actualizar calificaciones."""
+    """Endpoint para subir o actualizar calificaciones con UPSERT nativo."""
     try:
         # Verificar autenticación
         if 'user_id' not in session or 'role' not in session:
@@ -68,27 +68,26 @@ def upload_grades(id_asignacion, numero_parcial):
                 'success': False,
                 'error': 'No autenticado'
             }), 401
-
         if session['role'] != 'maestro':
             return jsonify({
                 'success': False,
                 'error': 'Acceso denegado - Solo maestros'
             }), 403
-        
+       
         user_id = session['user_id']
         supabase = sC.get_instance().get_client()
-
+        
         # Verificar que la asignación pertenece al maestro
         asignacion_response = supabase.table('asignacion').select(
             'id_asignacion'
         ).eq('id_asignacion', id_asignacion).eq('id_maestro', user_id).execute()
-        
+       
         if not asignacion_response.data:
             return jsonify({
                 'success': False,
                 'error': 'Asignación no encontrada o no pertenece al maestro'
             }), 403
-
+            
         # Verificar si se puede subir calificaciones
         calificacion_status = puede_subir_calificacion(id_asignacion, numero_parcial)
         if not calificacion_status['status']:
@@ -96,38 +95,91 @@ def upload_grades(id_asignacion, numero_parcial):
                 'success': False,
                 'error': calificacion_status['mensaje']
             }), 403
-
+            
         data = request.json
         if not data or not isinstance(data, list):
             return jsonify({
                 'success': False,
                 'error': 'Es necesario proveer una lista de calificaciones'
             }), 400
-
-        # Procesar y subir calificaciones
+        
+        upsert_data = []
         for calificacion in data:
             if 'id_alumno' not in calificacion or 'calificacion' not in calificacion:
                 return jsonify({
                     'success': False,
                     'error': 'Cada objeto de calificación debe tener "id_alumno" y "calificacion"'
                 }), 400
-
-            # Actualizar calificación
-            update_response = supabase.table('calificaciones').update({
+            
+            record = {
+                'id_alumno': calificacion['id_alumno'],
+                'id_asignacion': id_asignacion,
                 f'parcial_{numero_parcial}': calificacion['calificacion']
-            }).eq('id_alumno', calificacion['id_alumno']).eq('id_asignacion', id_asignacion).execute()
-
-            if not update_response.data:
-                return jsonify({
-                    'success': False,
-                    'error': f'No se pudo actualizar la calificación para el alumno {calificacion["id_alumno"]}'
-                }), 500
-
+            }
+            upsert_data.append(record)
+        
+        upsert_response = supabase.table('calificaciones').upsert(
+            upsert_data,
+            on_conflict='id_alumno,id_asignacion'
+        ).execute()
+        
+        if not upsert_response.data:
+            return jsonify({
+                'success': False,
+                'error': 'No se pudieron procesar las calificaciones'
+            }), 500
+        
         return jsonify({
             'success': True,
             'message': 'Calificaciones subidas exitosamente'
         })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Error interno del servidor: {str(e)}'
+        }), 500
 
+# Agregar este endpoint a tu archivo de rutas
+@maestro_grades_bp.route('/grades/<int:id_asignacion>/<int:numero_parcial>/check', methods=['GET'])
+def check_grades_availability(id_asignacion, numero_parcial):
+    """Endpoint para verificar si se pueden subir calificaciones."""
+    try:
+        # Verificar autenticación
+        if 'user_id' not in session or 'role' not in session:
+            return jsonify({
+                'success': False,
+                'error': 'No autenticado'
+            }), 401
+        
+        if session['role'] != 'maestro':
+            return jsonify({
+                'success': False,
+                'error': 'Acceso denegado - Solo maestros'
+            }), 403
+       
+        user_id = session['user_id']
+        supabase = sC.get_instance().get_client()
+        
+        # Verificar que la asignación pertenece al maestro
+        asignacion_response = supabase.table('asignacion').select(
+            'id_asignacion'
+        ).eq('id_asignacion', id_asignacion).eq('id_maestro', user_id).execute()
+       
+        if not asignacion_response.data:
+            return jsonify({
+                'success': False,
+                'error': 'Asignación no encontrada o no pertenece al maestro'
+            }), 403
+        
+        # Verificar si se puede subir calificaciones
+        calificacion_status = puede_subir_calificacion(id_asignacion, numero_parcial)
+        
+        return jsonify({
+            'success': True,
+            'can_upload': calificacion_status['status'],
+            'message': calificacion_status['mensaje']
+        })
+        
     except Exception as e:
         return jsonify({
             'success': False,

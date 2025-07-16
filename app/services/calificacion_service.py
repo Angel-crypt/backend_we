@@ -33,12 +33,12 @@ def puede_subir_calificacion(id_asignacion: int, numero_parcial: int) -> dict:
     if now < fecha_inicio:
         return {
             "status": False,
-            "mensaje": f"Aún no inicia el periodo para subir calificaciones. Inicia el {fecha_inicio.strftime('%Y-%m-%d %H:%M')}"
+            "mensaje": f"El periodo para subir calificaciones inicia el {fecha_inicio.strftime('%Y-%m-%d %H:%M')}"
         }
     elif now > fecha_fin:
         return {
             "status": False,
-            "mensaje": f"Ya terminó el periodo para subir calificaciones. Finalizó el {fecha_fin.strftime('%Y-%m-%d %H:%M')}"
+            "mensaje": f"El periodo para subir calificaciones finalizó el {fecha_fin.strftime('%Y-%m-%d %H:%M')}"
         }
     else:
         return {
