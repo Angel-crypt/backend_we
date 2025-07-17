@@ -139,6 +139,20 @@ def upload_grades(id_asignacion, numero_parcial):
             'error': f'Error interno del servidor: {str(e)}'
         }), 500
 
+@maestro_grades_bp.route('/grades/<int:id_asignacion>/<int:id_alumno>/<int:numero_parcial>', methods=['GET'])
+def get_alum_grade(id_asignacion, id_alumno, numero_parcial):
+    """Obtiene la calificación de un alumno específico para un parcial."""
+    supabase = sC.get_instance().get_client()
+    
+    response = supabase.table('calificaciones').select(
+        f'parcial_{numero_parcial}'
+    ).eq('id_asignacion', id_asignacion).eq('id_alumno', id_alumno).execute()
+    
+    if not response.data:
+        return None
+    
+    return response.data[0].get(f'parcial_{numero_parcial}')
+
 # Agregar este endpoint a tu archivo de rutas
 @maestro_grades_bp.route('/grades/<int:id_asignacion>/<int:numero_parcial>/check', methods=['GET'])
 def check_grades_availability(id_asignacion, numero_parcial):
